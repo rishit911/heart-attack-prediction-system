@@ -1,0 +1,9 @@
+pymongo
+dnspython
+flask
+flask-login
+werkzeug
+python-dotenv
+pandas
+scikit-learn
+joblib
