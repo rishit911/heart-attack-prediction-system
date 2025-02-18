@@ -8,6 +8,7 @@ import datetime
 import joblib
 import pandas as pd
 import pymongo
+from twilio.rest import Client
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
@@ -73,6 +74,7 @@ def register():
                 'username': request.form['username'],
                 'password': hashed_pw,
                 'email': request.form['email'],
+                'phone': request.form['phone'],
                 'created_at': datetime.datetime.utcnow()
             })
             
@@ -108,6 +110,16 @@ def predict():
         input_scaled = scaler.transform(input_df)
         prediction = model.predict(input_scaled)[0]
         result = "High Risk" if prediction == 1 else "Low Risk"
+        
+        if prediction == 1:
+            # Get patient's phone number
+            db = get_db_connection().heart_db
+            patient = db.patients.find_one({'_id': ObjectId(current_user.id)})
+            
+            if patient and 'phone' in patient:
+                message = f"ALERT: High heart attack risk detected. Please consult a doctor immediately."
+                send_sms_alert(patient['phone'], message)
+        
         return render_template('result.html', result=result, prediction=prediction)
     except Exception as e:
         return render_template('index.html', error="Invalid input! Please check all values", features=columns)
@@ -117,6 +129,23 @@ def predict():
 def logout():
     logout_user()
     return redirect('/login')
+
+def send_sms_alert(phone, message):
+    try:
+        account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+        auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+        twilio_phone = os.getenv('TWILIO_PHONE')
+        
+        client = Client(account_sid, auth_token)
+        message = client.messages.create(
+            body=message,
+            from_=twilio_phone,
+            to=phone
+        )
+        return True
+    except Exception as e:
+        print(f"SMS sending failed: {str(e)}")
+        return False
 
 if __name__ == '__main__':
     app.run(debug=True)
