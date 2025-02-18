@@ -84,13 +84,26 @@ def register():
 @app.route('/assessment')
 @login_required
 def assessment():
-    return render_template('index.html', features=columns)
+    # Exclude 'Sex' from the displayed features since we have a dedicated gender dropdown
+    filtered_features = [col for col in columns if col != 'Sex']
+    return render_template('index.html', features=filtered_features)
 
 @app.route('/predict', methods=['POST'])
 @login_required
 def predict():
     try:
-        user_input = {col: float(request.form[col]) for col in columns}
+        # Convert gender to numerical value
+        gender = request.form['Gender']
+        sex_value = 0 if gender == 'Male' else 1
+        
+        # Create user input with converted gender value
+        user_input = {
+            col: float(request.form[col]) 
+            for col in columns 
+            if col != 'Sex'
+        }
+        user_input['Sex'] = sex_value
+        
         input_df = pd.DataFrame([user_input], columns=columns)
         input_scaled = scaler.transform(input_df)
         prediction = model.predict(input_scaled)[0]
