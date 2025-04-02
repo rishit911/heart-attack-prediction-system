@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h2 class="text-center mb-0">Heart Attack Risk Assessment</h2>
+    </div>
+    <div class="card-body">
+        <!-- Previous Assessments -->
+        <div class="mb-5">
+            <h4>Previous Assessments</h4>
+            {% if assessments %}
+            <div class="mt-4">
+                {% for assessment in assessments %}
+                <div class="card mb-2 {% if 'result' in assessment and assessment['result'] == 'High Risk' %}border-danger{% else %}border-success{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title mb-0">
+                                    {% if 'date' in assessment and assessment['date'] %}
+                                        {{ assessment['date'].strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        {% if 'timestamp' in assessment and assessment['timestamp'] %}
+                                            {{ assessment['timestamp'].strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                            Date not available
+                                        {% endif %}
+                                    {% endif %}
+                                </h5>
+                                <p class="mb-0 text-muted">Risk Level: {{ assessment['result'] if 'result' in assessment else 'Unknown' }}</p>
+                                <p class="mb-0 text-muted">Risk Percentage: 
+                                    {% if 'risk_percentage' in assessment %}
+                                        {{ assessment['risk_percentage'] }}%
+                                    {% else %}
+                                        Unknown
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <span class="badge {% if 'result' in assessment and assessment['result'] == 'High Risk' %}bg-danger{% else %}bg-success{% endif %} p-2">
+                                {{ assessment['result'] if 'result' in assessment else 'Unknown' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info mt-4">No previous assessments found</div>
+            {% endif %}
+            
+            <!-- Start New Assessment as Text -->
+            <div class="text-center mt-4">
+                <h3 class="text-primary mb-3">Start New Heart Health Check</h3>
+            </div>
+        </div>
+
+        <!-- New Assessment Form -->
+        {% if error %}
+        <div class="alert alert-danger mt-3">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <!-- Prediction Result -->
+        {% if prediction is defined %}
+        <div class="alert {% if prediction == 1 %}alert-danger{% else %}alert-success{% endif %} mt-3">
+            <h4 class="alert-heading">Assessment Result</h4>
+            <p class="mb-0">
+                {% if prediction == 1 %}
+                <strong>High Risk of Heart Disease</strong>
+                {% else %}
+                <strong>Low Risk of Heart Disease</strong>
+                {% endif %}
+                <br>
+                Risk Percentage: {{ risk_percentage }}%
+            </p>
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('predict') }}">
+            <!-- Hidden inputs for patient profile data -->
+            <input type="hidden" name="Gender" value="{{ gender }}">
+            <input type="hidden" name="Age" value="{{ age }}">
+            
+            <div class="mb-3">
+                <label class="form-label" for="maxHrInput">Max Heart Rate</label>
+                <div class="input-group">
+                    <input type="number" class="form-control" id="maxHrInput" 
+                           name="Max HR" value="{{ heart_rate if heart_rate else '' }}" 
+                           placeholder="Enter your heart rate" required>
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshHeartRate()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <small id="hrHelp" class="text-muted">
+                    {% if heart_rate %}Latest reading from sensor{% else %}Please enter your heart rate manually{% endif %}
+                </small>
+            </div>
+            
+            <!-- New SpO2 Field -->
+            <div class="mb-3">
+                <label class="form-label" for="spo2Input">SpO2 Level (%)</label>
+                <div class="input-group">
+                    <input type="number" step="0.1" min="90" max="100" class="form-control" 
+                           id="spo2Input" name="SpO2" 
+                           value="{{ spo2 if spo2 else request.form.SpO2|default('98') }}" 
+                           placeholder="Enter SpO2 level" required>
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshSpO2()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <small id="spo2Help" class="text-muted">
+                    {% if spo2 %}Latest reading from sensor{% else %}Normal range: 95-100%{% endif %}
+                </small>
+            </div>
+            
+            <!-- New Temperature Field -->
+            <div class="mb-3">
+                <label class="form-label" for="tempInput">Body Temperature (°C)</label>
+                <div class="input-group">
+                    <input type="number" step="0.1" min="35" max="40" class="form-control" 
+                           id="tempInput" name="Temperature" 
+                           value="{{ temperature if temperature else '36.8' }}" 
+                           placeholder="Enter body temperature" required>
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshTemperature()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <small id="tempHelp" class="text-muted">
+                    {% if temperature %}Latest reading from sensor{% else %}Normal range: 36.5-37.5°C{% endif %}
+                </small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100">Calculate Risk</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Font Awesome for the refresh icon -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script>
+function refreshHeartRate() {
+    const button = document.querySelector('button[onclick="refreshHeartRate()"]');
+    const hrInput = document.getElementById('maxHrInput');
+    const spo2Input = document.getElementById('spo2Input');
+    const tempInput = document.getElementById('tempInput');
+    const hrHelp = document.getElementById('hrHelp');
+    const spo2Help = document.getElementById('spo2Help');
+    
+    // Disable button and show loading state
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    
+    fetch('{{ url_for("refresh_sensor_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update heart rate
+                if (data.hr_success) {
+                    hrInput.value = data.heart_rate;
+                    hrHelp.textContent = 'Latest reading from sensor';
+                } else {
+                    hrInput.value = '';
+                    hrHelp.textContent = data.hr_message || 'Please enter heart rate manually';
+                }
+                
+                // Update SpO2
+                if (data.spo2_success) {
+                    spo2Input.value = data.spo2;
+                    spo2Help.textContent = 'Latest reading from sensor';
+                } else {
+                    spo2Input.value = '98';  // Default value
+                    spo2Help.textContent = data.spo2_message || 'Normal range: 95-100%';
+                }
+                
+                // Update temperature (always available in dataset)
+                if (data.temperature) {
+                    tempInput.value = data.temperature;
+                }
+            } else {
+                hrHelp.textContent = 'Error fetching data. Please enter manually.';
+            }
+        })
+        .catch(error => {
+            hrHelp.textContent = 'Error fetching data. Please enter manually.';
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            // Reset button state
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        });
+}
+
+function refreshSpO2() {
+    const button = document.querySelector('button[onclick="refreshSpO2()"]');
+    const spo2Input = document.getElementById('spo2Input');
+    const spo2Help = document.getElementById('spo2Help');
+    
+    // Disable button and show loading state
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    
+    fetch('{{ url_for("refresh_sensor_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update SpO2
+                if (data.spo2_success) {
+                    spo2Input.value = data.spo2;
+                    spo2Help.textContent = 'Latest reading from sensor';
+                } else {
+                    spo2Input.value = '98';  // Default value
+                    spo2Help.textContent = data.spo2_message || 'Normal range: 95-100%';
+                }
+            } else {
+                spo2Help.textContent = 'Error fetching data. Please enter manually.';
+            }
+        })
+        .catch(error => {
+            spo2Help.textContent = 'Error fetching data. Please enter manually.';
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            // Reset button state
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        });
+}
+
+function refreshTemperature() {
+    const button = document.querySelector('button[onclick="refreshTemperature()"]');
+    const tempInput = document.getElementById('tempInput');
+    const tempHelp = document.getElementById('tempHelp');
+    
+    // Disable button and show loading state
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    
+    fetch('{{ url_for("refresh_sensor_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update temperature (always available in dataset)
+                if (data.temperature) {
+                    tempInput.value = data.temperature;
+                }
+            } else {
+                tempHelp.textContent = 'Error fetching data. Please enter manually.';
+            }
+        })
+        .catch(error => {
+            tempHelp.textContent = 'Error fetching data. Please enter manually.';
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            // Reset button state
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        });
+}
+</script>
+{% endblock %}

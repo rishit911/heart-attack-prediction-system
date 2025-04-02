@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h2 class="text-center mb-0">Update Medical Profile</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label" for="chestPainType">Chest Pain Type</label>
+                <select class="form-select" id="chestPainType" name="Chest pain type" required>
+                    <option value="">Select chest pain type...</option>
+                    <option value="1" {% if medical.chest_pain_type == 1 %}selected{% endif %}>Typical angina</option>
+                    <option value="2" {% if medical.chest_pain_type == 2 %}selected{% endif %}>Atypical angina</option>
+                    <option value="3" {% if medical.chest_pain_type == 3 %}selected{% endif %}>Non-anginal pain</option>
+                    <option value="4" {% if medical.chest_pain_type == 4 %}selected{% endif %}>Asymptomatic</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="bp">Blood Pressure (mm Hg)</label>
+                <input type="number" class="form-control" id="bp" name="BP" 
+                       value="{{ medical.bp }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="cholesterol">Cholesterol (mg/dl)</label>
+                <input type="number" class="form-control" id="cholesterol" name="Cholesterol" 
+                       value="{{ medical.cholesterol }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="fbs">Fasting Blood Sugar > 120 mg/dl</label>
+                <select class="form-select" id="fbs" name="FBS over 120" required>
+                    <option value="1" {% if medical.fbs == 1 %}selected{% endif %}>Yes</option>
+                    <option value="0" {% if medical.fbs == 0 %}selected{% endif %}>No</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="ekg">EKG Results</label>
+                <select class="form-select" id="ekg" name="EKG results" required>
+                    <option value="0" {% if medical.ekg == 0 %}selected{% endif %}>Normal</option>
+                    <option value="1" {% if medical.ekg == 1 %}selected{% endif %}>ST-T wave abnormality</option>
+                    <option value="2" {% if medical.ekg == 2 %}selected{% endif %}>Left ventricular hypertrophy</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="exerciseAngina">Exercise Induced Angina</label>
+                <select class="form-select" id="exerciseAngina" name="Exercise angina" required>
+                    <option value="1" {% if medical.exercise_angina == 1 %}selected{% endif %}>Yes</option>
+                    <option value="0" {% if medical.exercise_angina == 0 %}selected{% endif %}>No</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="stDepression">ST Depression</label>
+                <input type="number" step="0.1" class="form-control" id="stDepression" name="ST depression" 
+                       value="{{ medical.st_depression }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="slopeSt">Slope of ST</label>
+                <select class="form-select" id="slopeSt" name="Slope of ST" required>
+                    <option value="1" {% if medical.slope_st == 1 %}selected{% endif %}>Upsloping</option>
+                    <option value="2" {% if medical.slope_st == 2 %}selected{% endif %}>Flat</option>
+                    <option value="3" {% if medical.slope_st == 3 %}selected{% endif %}>Downsloping</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="vesselsFluro">Number of Vessels (0-3)</label>
+                <input type="number" min="0" max="3" class="form-control" id="vesselsFluro" name="Number of vessels fluro" 
+                       value="{{ medical.vessels_fluro }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="thallium">Thallium Stress Test Result</label>
+                <select class="form-select" id="thallium" name="Thallium" required>
+                    <option value="3" {% if medical.thallium == 3 %}selected{% endif %}>Normal</option>
+                    <option value="6" {% if medical.thallium == 6 %}selected{% endif %}>Fixed defect</option>
+                    <option value="7" {% if medical.thallium == 7 %}selected{% endif %}>Reversible defect</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Update Medical Profile</button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

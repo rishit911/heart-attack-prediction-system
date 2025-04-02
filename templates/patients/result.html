@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow result-card">
+        <div class="card-header {% if risk_level == 'High Risk' %}bg-danger{% else %}bg-success{% endif %} text-white">
+            <h4 class="mb-0">Assessment Result</h4>
+        </div>
+        <div class="card-body text-center">
+            <h2 class="mb-4">Heart Attack Risk Assessment</h2>
+            <div class="alert {% if risk_level == 'High Risk' %}alert-danger{% else %}alert-success{% endif %} p-4">
+                <h3 class="card-title">{{ risk_level }}</h3>
+            </div>
+            <div class="mt-4">
+                <a href="{{ url_for('patient_dashboard') }}" class="btn btn-primary">
+                    Return to Dashboard
+                </a>
+                <a href="{{ url_for('patient_assessment') }}" class="btn btn-outline-secondary">
+                    New Assessment
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

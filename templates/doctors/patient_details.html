@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Patient Details</h2>
+    
+    <!-- Personal Information -->
+    <div class="card mb-4">
+        <div class="card-header">Personal Information</div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">{{ patient.email }}</dd>
+                
+                <dt class="col-sm-3">Gender</dt>
+                <dd class="col-sm-9">{{ 'Male' if patient.gender == 'Male' else 'Female' }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Medical Profile -->
+    <div class="card mb-4">
+        <div class="card-header">Medical Profile</div>
+        <div class="card-body">
+            {% if medical %}
+            <dl class="row">
+                <dt class="col-sm-4">Chest Pain Type</dt>
+                <dd class="col-sm-8">
+                    {% set pain_types = ['Typical angina', 'Atypical angina', 'Non-anginal pain', 'Asymptomatic'] %}
+                    {% if medical.chest_pain_type is defined and medical.chest_pain_type %}
+                        {% if medical.chest_pain_type|int >= 1 and medical.chest_pain_type|int <= 4 %}
+                            {{ pain_types[medical.chest_pain_type|int - 1] }}
+                        {% else %}
+                            Unknown ({{ medical.chest_pain_type }})
+                        {% endif %}
+                    {% else %}
+                        Not specified
+                    {% endif %}
+                </dd>
+                
+                <dt class="col-sm-4">Blood Pressure</dt>
+                <dd class="col-sm-8">{{ medical.bp }} mmHg</dd>
+                
+                <dt class="col-sm-4">Cholesterol</dt>
+                <dd class="col-sm-8">{{ medical.cholesterol }} mg/dl</dd>
+                
+                <dt class="col-sm-4">FBS over 120</dt>
+                <dd class="col-sm-8">{{ 'Yes' if medical.fbs == 1 else 'No' }}</dd>
+                
+                <dt class="col-sm-4">EKG Results</dt>
+                <dd class="col-sm-8">
+                    {% set ekg_labels = ['Normal', 'ST-T wave abnormality', 'Left ventricular hypertrophy'] %}
+                    {{ ekg_labels[medical.ekg] if medical.ekg < 3 else 'Unknown' }}
+                </dd>
+                
+                <dt class="col-sm-4">Exercise Angina</dt>
+                <dd class="col-sm-8">{{ 'Yes' if medical.exercise_angina == 1 else 'No' }}</dd>
+                
+                <dt class="col-sm-4">ST Depression</dt>
+                <dd class="col-sm-8">{{ medical.st_depression }} mm</dd>
+                
+                <dt class="col-sm-4">Slope of ST</dt>
+                <dd class="col-sm-8">
+                    {% set slope_labels = ['Upsloping', 'Flat', 'Downsloping'] %}
+                    {{ slope_labels[medical.slope_st - 1] if 1 <= medical.slope_st <= 3 else 'Unknown' }}
+                </dd>
+                
+                <dt class="col-sm-4">Vessels Fluro</dt>
+                <dd class="col-sm-8">{{ medical.vessels_fluro }} vessels</dd>
+                
+                <dt class="col-sm-4">Thallium</dt>
+                <dd class="col-sm-8">
+                    {% set thallium_labels = {3: 'Normal', 6: 'Fixed defect', 7: 'Reversible defect'} %}
+                    {{ thallium_labels.get(medical.thallium, 'Unknown') }}
+                </dd>
+            </dl>
+            {% else %}
+            <div class="alert alert-warning">No medical profile available</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Assessment History -->
+    <div class="card">
+        <div class="card-header">Assessment History</div>
+        <div class="card-body">
+            {% if assessments %}
+            {% for assessment in assessments %}
+            <div class="card mb-2 {% if 'result' in assessment and 'High' in assessment['result'] %}border-danger{% else %}border-success{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {% if 'date' in assessment and assessment['date'] %}
+                            {{ assessment['date'].strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            {% if 'timestamp' in assessment and assessment['timestamp'] %}
+                                {{ assessment['timestamp'].strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                Date not available
+                            {% endif %}
+                        {% endif %}
+                    </h5>
+                    <p class="mb-1 text-{{ 'danger' if 'result' in assessment and 'High' in assessment['result'] else 'success' }}">
+                        {{ assessment['result'] if 'result' in assessment else 'Unknown' }}
+                        {% if 'risk_percentage' in assessment %}
+                            ({{ assessment['risk_percentage'] }}%)
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-info">No assessments found</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

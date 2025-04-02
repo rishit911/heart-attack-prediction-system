@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Welcome, {{ current_user.username }}</h2>
+        <a href="{{ url_for('patient_assessment') }}" class="btn btn-primary">
+            Start New Assessment
+        </a>
+    </div>
+
+    <!-- Medical Overview -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Your Medical Profile</h4>
+        </div>
+        <div class="card-body">
+            {% if medical %}
+            <dl class="row">
+                <dt class="col-sm-4">Chest Pain Type</dt>
+                <dd class="col-sm-8">{{ ['Typical angina', 'Atypical angina', 'Non-anginal pain', 'Asymptomatic'][medical.chest_pain_type - 1] }}</dd>
+
+                <dt class="col-sm-4">Blood Pressure</dt>
+                <dd class="col-sm-8">{{ medical.bp }} mmHg</dd>
+
+                <dt class="col-sm-4">Cholesterol</dt>
+                <dd class="col-sm-8">{{ medical.cholesterol }} mg/dl</dd>
+
+                <dt class="col-sm-4">Fasting Blood Sugar > 120</dt>
+                <dd class="col-sm-8">{{ 'Yes' if medical.fbs == 1 else 'No' }}</dd>
+
+                <dt class="col-sm-4">EKG Results</dt>
+                <dd class="col-sm-8">{{ ['Normal', 'ST-T wave abnormality', 'Left ventricular hypertrophy'][medical.ekg] }}</dd>
+
+                <dt class="col-sm-4">Exercise Angina</dt>
+                <dd class="col-sm-8">{{ 'Yes' if medical.exercise_angina == 1 else 'No' }}</dd>
+
+                <dt class="col-sm-4">ST Depression</dt>
+                <dd class="col-sm-8">{{ medical.st_depression }} mm</dd>
+
+                <dt class="col-sm-4">Slope of ST</dt>
+                <dd class="col-sm-8">{{ ['Upsloping', 'Flat', 'Downsloping'][medical.slope_st - 1] }}</dd>
+
+                <dt class="col-sm-4">Number of Vessels</dt>
+                <dd class="col-sm-8">{{ medical.vessels_fluro }}</dd>
+
+                <dt class="col-sm-4">Thallium Test</dt>
+                <dd class="col-sm-8">{{ ['Normal', 'Fixed defect', 'Reversible defect'][medical.thallium - 3] }}</dd>
+            </dl>
+            {% else %}
+            <div class="alert alert-warning">
+                No medical profile available. Please complete an assessment.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Registered Doctors -->
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Your Doctors</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Doctor Name</th>
+                            <th>Hospital</th>
+                            <th>Contact</th>
+                            <th>Specialization</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in doctors %}
+                        <tr>
+                            <td>Dr. {{ doctor.username }}</td>
+                            <td>{{ doctor.hospital }}</td>
+                            <td>{{ doctor.email }}</td>
+                            <td>Cardiology</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">No doctors registered yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
