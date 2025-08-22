@@ -1,4 +1,5 @@
 HeartCare: IoT and ML-Based Heart Attack Detection and Alarm System
+
 📌 Overview
 
 Heart disease remains one of the leading causes of mortality worldwide. HeartCare is an intelligent, real-time heart disease prediction and alert system that combines IoT sensors with an ensemble machine learning model to assess cardiovascular risk efficiently and accurately.
